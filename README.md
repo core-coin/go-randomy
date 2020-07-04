@@ -1,75 +1,14 @@
 # go-randomx
 
-**WARNING: this is not a lib, but a binding**
-
-Do NOT use go mod import this
-
 ## Algorithms
 
-- random-x
-- random-xl
-- random-wow
-- random-arq
-- random-yada
-- ...
+random-x series
 
-## Build
+## Usage
 
-### Windows
+This repo will auto-download the latest `librandomx.a` binary from https://github.com/ngchain/RandomX which currently is RandomNG algorithm. So you can directly import this and go.mod will handle all matters.
 
-Firstly download and install the msys2, then open and install the following components:
-
-Take msys2's pacman for example
-
-```bash
-pacman -Syu
-pacman -S git mingw64/mingw-w64-x86_64-go mingw64/mingw-w64-x86_64-gcc mingw64/mingw-w64-x86_64-cmake mingw64/mingw-w64-x86_64-make
-```
-
-Secondly clone this repo to your project folder
-```
-cd MyProject
-git clone https://github.com/maoxs2/go-randomx
-```
-
-And then run `./build.sh` to auto compile official random-x code 
-```bash
-# clone and compile RandomX source code into librandomx
-./build random-x # random-x can be replaced with random-xl random-arq random-wow
-```
-
-Finally you can using the package as your internal one. 
-
-Directly using it with `import "github.com/MyProject/go-randomx"` and then `randomx.AllocCache()` etc.
-
-### Linux
-
-Take Ubuntu for example 
-
-Download the latest go from [here](https://golang.org/dl/) and then install it following [this instruction](https://golang.org/doc/install#tarball)
-
-```bash
-sudo apt update && sudo apt upgrade 
-sudo apt install git cmake make gcc build-essential
-```
-
-Secondly clone this repo to your project folder
-
-```
-cd MyProject
-git clone https://github.com/maoxs2/go-randomx
-```
-
-And then run `go generate` to auto compile official random-x code
-
-```bash
-# clone and compile RandomX source code into librandomx
-./build random-x # random-x can be replaced with random-xl random-arq random-wow
-```
-
-Finally you can using the package as your internal one. 
-
-Directly using it with `import "github.com/myname/my-project/go-randomx"` and then start the functions like `randomx.AllocCache()` etc.
+If you wanna use go-randomx for other variant, fork your RandomX, and then add the github actions & workflows from https://github.com/ngchain/RandomX into yours, finally edit `./ci/download-librandomx.py` and push this to github
 
 ## More
 
