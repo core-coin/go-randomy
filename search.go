@@ -1,8 +1,8 @@
 package randomx
 
 //#cgo LDFLAGS: -lrandomx -lstdc++ -static -static-libgcc -static-libstdc++ -lpthread
-//#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64
-//#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64
+//#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64 -lm
+//#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64 -lm
 //#cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64
 /*
 #include <stdint.h>
