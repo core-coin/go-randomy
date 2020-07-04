@@ -1,9 +1,11 @@
 package randomx
 
 //#cgo CFLAGS: -I./randomx
-//#cgo LDFLAGS: -L${SRCDIR}/lib -lrandomx
-//#cgo LDFLAGS: -lstdc++
+//#cgo LDFLAGS: -lstdc++ -lrandomx
 //#cgo LDFLAGS: -static -static-libgcc -static-libstdc++ -lpthread
+// #cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64
+// #cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64
+// #cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64
 /*
 #include "randomx.h"
 #include <time.h>

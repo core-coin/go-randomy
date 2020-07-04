@@ -6,11 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math/rand"
-	//"math/rand"
 	"runtime"
-	"strconv"
-	//"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -21,13 +17,7 @@ var testPairs = [][][]byte{
 	{
 		[]byte("test key 000"),
 		[]byte("This is a test"),
-		[]byte("639183aae1bf4c9a35884cb46b09cad9175f04efd7684e7262a0ac1c2f0b4e3f"),
-	},
-	// randomXL
-	{
-		[]byte("test key 000"),
-		[]byte("This is a test"),
-		[]byte("b291ec8a532bc4f78bd75b43d211e1169bb65b1a8f66d4250376ba1d6fcff1bd"),
+		[]byte("46b49051978dcce1cd534a4066035184afb16a0591b43522466e10cc2496717e"),
 	},
 }
 
@@ -38,17 +28,25 @@ func TestAllocCache(t *testing.T) {
 }
 
 func TestAllocDataset(t *testing.T) {
-	ds, _ := AllocDataset(FlagDefault)
-	cache, _ := AllocCache(FlagDefault)
+	t.Log("warning: cannot use FlagDefault only, very slow!. After using FlagJIT, really fast!")
+
+	ds, err := AllocDataset(FlagDefault)
+	if err != nil {
+		panic(err)
+	}
+	cache, err := AllocCache(FlagDefault)
+	if err != nil {
+		panic(err)
+	}
 
 	seed := make([]byte, 32)
 	InitCache(cache, seed)
-	log.Println("rxCache initialization finished")
+	t.Log("rxCache initialization finished")
 
 	count := DatasetItemCount()
-	log.Println("dataset count:", count/1024/1024, "mb")
+	t.Log("dataset count:", count/1024/1024, "mb")
 	InitDataset(ds, cache, 0, count)
-	log.Println(GetDatasetMemory(ds))
+	t.Log(GetDatasetMemory(ds))
 
 	ReleaseDataset(ds)
 	ReleaseCache(cache)
@@ -56,19 +54,20 @@ func TestAllocDataset(t *testing.T) {
 
 func TestCreateVM(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var tp = testPairs[1]
+	var tp = testPairs[0]
 	cache, _ := AllocCache(FlagDefault)
-	log.Println("alloc cache mem finished")
+	t.Log("alloc cache mem finished")
 	seed := tp[0]
 	InitCache(cache, seed)
-	log.Println("cache initialization finished")
+	t.Log("cache initialization finished")
 
 	ds, _ := AllocDataset(FlagDefault)
-	log.Println("alloc dataset mem finished")
+	t.Log("alloc dataset mem finished")
 	count := DatasetItemCount()
-	log.Println("dataset count:", count)
+	t.Log("dataset count:", count)
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
+	t.Log("Here though using FlagDefault, but we use multi-core to accelerate it")
 	for i := uint32(0); i < workerNum; i++ {
 		wg.Add(1)
 		a := (count * i) / workerNum
@@ -79,13 +78,13 @@ func TestCreateVM(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	log.Println("dataset initialization finished") // too slow when one thread
+	t.Log("dataset initialization finished") // too slow when one thread
 	vm, _ := CreateVM(cache, ds, FlagJIT, FlagHardAES, FlagFullMEM)
 
 	var hashCorrect = make([]byte, hex.DecodedLen(len(tp[2])))
 	_, err := hex.Decode(hashCorrect, tp[2])
 	if err != nil {
-		log.Println(err)
+		t.Log(err)
 	}
 
 	if bytes.Compare(CalculateHash(vm, tp[1]), hashCorrect) != 0 {
@@ -96,10 +95,11 @@ func TestCreateVM(t *testing.T) {
 func TestNewRxVM(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
-	pair := testPairs[1]
+	pair := testPairs[0]
 	workerNum := uint32(runtime.NumCPU())
 
 	seed := pair[0]
+	t.Log("Here we use FlagJIT, really fast!")
 	dataset, _ := NewRxDataset(FlagJIT)
 	if dataset.GoInit(seed, workerNum) == false {
 		log.Fatal("failed to init dataset")
@@ -116,11 +116,11 @@ func TestNewRxVM(t *testing.T) {
 	var hashCorrect = make([]byte, hex.DecodedLen(len(pair[2])))
 	_, err := hex.Decode(hashCorrect, pair[2])
 	if err != nil {
-		log.Println(err)
+		t.Log(err)
 	}
 
 	if bytes.Compare(hash, hashCorrect) != 0 {
-		log.Println(hash)
+		t.Logf("%x", hash)
 		t.Fail()
 	}
 }
@@ -128,7 +128,7 @@ func TestNewRxVM(t *testing.T) {
 func TestCalculateHashFirst(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
-	pair := testPairs[1]
+	pair := testPairs[0]
 	workerNum := uint32(runtime.NumCPU())
 
 	seed := pair[0]
@@ -177,16 +177,82 @@ func TestCalculateHashFirst(t *testing.T) {
 
 }
 
-// go test -v -bench "." -benchtime=30m
-func BenchmarkCalculateHash(b *testing.B) {
+// go test -v -run=^$ -benchtime=1m  -timeout 20m -bench=.
+func BenchmarkCalculateHashDefault(b *testing.B) {
 	cache, _ := AllocCache(FlagDefault)
 	ds, _ := AllocDataset(FlagDefault)
 	InitCache(cache, []byte("123"))
 	FastInitFullDataset(ds, cache, uint32(runtime.NumCPU()))
 	vm, _ := CreateVM(cache, ds, FlagDefault)
+
+	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
-		nonce := strconv.FormatInt(rand.Int63(), 10) // just test
-		CalculateHash(vm, []byte("123"+nonce))
+		CalculateHash(vm, []byte("123"))
+	}
+
+	DestroyVM(vm)
+}
+
+func BenchmarkCalculateHashJIT(b *testing.B) {
+	cache, _ := AllocCache(FlagDefault | FlagJIT)
+	ds, _ := AllocDataset(FlagDefault | FlagJIT)
+	InitCache(cache, []byte("123"))
+	FastInitFullDataset(ds, cache, uint32(runtime.NumCPU()))
+	vm, _ := CreateVM(cache, ds, FlagDefault)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		CalculateHash(vm, []byte("123"))
+	}
+
+	DestroyVM(vm)
+}
+
+func BenchmarkCalculateHashFullMEM(b *testing.B) {
+	cache, _ := AllocCache(FlagDefault | FlagFullMEM)
+	ds, _ := AllocDataset(FlagDefault | FlagFullMEM)
+	InitCache(cache, []byte("123"))
+	FastInitFullDataset(ds, cache, uint32(runtime.NumCPU()))
+	vm, _ := CreateVM(cache, ds, FlagDefault)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		CalculateHash(vm, []byte("123"))
+	}
+
+	DestroyVM(vm)
+}
+
+func BenchmarkCalculateHashHardAES(b *testing.B) {
+	cache, _ := AllocCache(FlagDefault | FlagHardAES)
+	ds, _ := AllocDataset(FlagDefault | FlagHardAES)
+	InitCache(cache, []byte("123"))
+	FastInitFullDataset(ds, cache, uint32(runtime.NumCPU()))
+	vm, _ := CreateVM(cache, ds, FlagDefault)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		CalculateHash(vm, []byte("123"))
+	}
+
+	DestroyVM(vm)
+}
+
+func BenchmarkCalculateHashAll(b *testing.B) {
+	cache, _ := AllocCache(FlagDefault | FlagArgon2 | FlagArgon2AVX2 | FlagArgon2SSSE3 | FlagFullMEM | FlagHardAES | FlagJIT) // without lagePage to avoid panic
+	ds, _ := AllocDataset(FlagDefault | FlagArgon2 | FlagArgon2AVX2 | FlagArgon2SSSE3 | FlagFullMEM | FlagHardAES | FlagJIT)
+	InitCache(cache, []byte("123"))
+	FastInitFullDataset(ds, cache, uint32(runtime.NumCPU()))
+	vm, _ := CreateVM(cache, ds, FlagDefault)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		CalculateHash(vm, []byte("123"))
 	}
 
 	DestroyVM(vm)
