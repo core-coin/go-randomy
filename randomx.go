@@ -5,66 +5,10 @@ package randomx
 //#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64 -lm
 //#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64 -lm
 //#cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64 -static -static-libgcc -static-libstdc++
-/*
-#include "randomx.h"
-#include <time.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <pthread.h>
-
-struct arg_struct {
-	randomx_dataset *dataset;
-	randomx_cache *cache;
-	void *seed;
-	uint32_t a, b;
-};
-
-void *init_full_dataset_thread(void *arguments)
-{
-	struct arg_struct *args = arguments;
-	randomx_init_dataset(args->dataset, args->cache, args->a, args->b - args->a);
-	free(arguments);
-	pthread_exit(NULL);
-	return NULL;
-}
-
-void init_full_dataset(randomx_dataset *dataset, randomx_cache *cache, uint32_t numThreads)
-{
-    const uint64_t datasetItemCount = randomx_dataset_item_count();
-
-    if (numThreads > 1) {
-		pthread_t threads[numThreads];
-
-        for (uint64_t i = 0; i < numThreads; ++i) {
-            pthread_t thread;
-			threads[i] = thread;
-
-            uint32_t a = (datasetItemCount * i) / numThreads;
-            uint32_t b = (datasetItemCount * (i + 1)) / numThreads;
-
-		    struct arg_struct *args = malloc(sizeof(struct arg_struct));
-		    args->dataset = dataset;
-		    args->cache = cache;
-			args->a = a;
-			args->b = b;
-
-			pthread_create(&thread, NULL, &init_full_dataset_thread, (void *)args);
-        }
-
-        for (uint32_t i = 0; i < numThreads; ++i) {
-            pthread_join(threads[i], NULL);
-        }
-    }
-    else {
-        randomx_init_dataset(dataset, cache, 0, datasetItemCount);
-    }
-}
-*/
+//#include "randomx.h"
 import "C"
 import (
 	"errors"
-	"sync"
 	"unsafe"
 )
 
@@ -145,26 +89,6 @@ func InitDataset(dataset *C.randomx_dataset, cache *C.randomx_cache, startItem u
 	}
 
 	C.randomx_init_dataset(dataset, cache, C.ulong(startItem), C.ulong(itemCount))
-}
-
-// FastInitFullDataset using c's pthread to boost the dataset init. 472s -> 466s
-func FastInitFullDataset(dataset *C.randomx_dataset, cache *C.randomx_cache, workerNum uint32) {
-	if dataset == nil {
-		panic("alloc dataset mem is required")
-	}
-
-	if cache == nil {
-		panic("alloc cache mem is required")
-	}
-
-	var wg sync.WaitGroup
-	go func() {
-		wg.Add(1)
-		C.init_full_dataset(dataset, cache, C.uint32_t(workerNum))
-		wg.Done()
-	}()
-
-	wg.Wait()
 }
 
 func GetDatasetMemory(dataset *C.randomx_dataset) unsafe.Pointer {
