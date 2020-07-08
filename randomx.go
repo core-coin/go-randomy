@@ -12,25 +12,28 @@ import (
 	"unsafe"
 )
 
-type Flag int
+const RxHashSize = C.RANDOMX_HASH_SIZE
 
-var (
-	FlagDefault     Flag = 0 // for all default
-	FlagLargePages  Flag = 1 // for dataset & rxCache & vm
-	FlagHardAES     Flag = 2 // for vm
-	FlagFullMEM     Flag = 4 // for vm
-	FlagJIT         Flag = 8 // for vm & cache
-	FlagSecure      Flag = 16
-	FlagArgon2SSSE3 Flag = 32 // for cache
-	FlagArgon2AVX2  Flag = 64 // for cache
-	FlagArgon2      Flag = 96 // = avx2 + sse3
+// All flags
+const (
+	FlagDefault     C.randomx_flags = 0 // for all default
+	FlagLargePages  C.randomx_flags = 1 // for dataset & rxCache & vm
+	FlagHardAES     C.randomx_flags = 2 // for vm
+	FlagFullMEM     C.randomx_flags = 4 // for vm
+	FlagJIT         C.randomx_flags = 8 // for vm & cache
+	FlagSecure      C.randomx_flags = 16
+	FlagArgon2SSSE3 C.randomx_flags = 32 // for cache
+	FlagArgon2AVX2  C.randomx_flags = 64 // for cache
+	FlagArgon2      C.randomx_flags = 96 // = avx2 + sse3
 )
 
-func (f Flag) toC() C.randomx_flags {
-	return (C.randomx_flags)(f)
-}
+type Cache *C.randomx_cache
 
-func AllocCache(flags ...Flag) (*C.randomx_cache, error) {
+type Dataset *C.randomx_dataset
+
+type VM *C.randomx_vm
+
+func AllocCache(flags ...C.randomx_flags) (Cache, error) {
 	var SumFlag = FlagDefault
 	var cache *C.randomx_cache
 
@@ -38,7 +41,7 @@ func AllocCache(flags ...Flag) (*C.randomx_cache, error) {
 		SumFlag = SumFlag | flag
 	}
 
-	cache = C.randomx_alloc_cache(SumFlag.toC())
+	cache = C.randomx_alloc_cache(SumFlag)
 	if cache == nil {
 		return nil, errors.New("failed to alloc mem for rxCache")
 	}
@@ -46,7 +49,7 @@ func AllocCache(flags ...Flag) (*C.randomx_cache, error) {
 	return cache, nil
 }
 
-func InitCache(cache *C.randomx_cache, seed []byte) {
+func InitCache(cache Cache, seed []byte) {
 	if len(seed) == 0 {
 		panic("seed cannot be NULL")
 	}
@@ -54,18 +57,18 @@ func InitCache(cache *C.randomx_cache, seed []byte) {
 	C.randomx_init_cache(cache, unsafe.Pointer(&seed[0]), C.size_t(len(seed)))
 }
 
-func ReleaseCache(cache *C.randomx_cache) {
+func ReleaseCache(cache Cache) {
 	C.randomx_release_cache(cache)
 }
 
-func AllocDataset(flags ...Flag) (*C.randomx_dataset, error) {
+func AllocDataset(flags ...C.randomx_flags) (Dataset, error) {
 	var SumFlag = FlagDefault
 	for _, flag := range flags {
 		SumFlag = SumFlag | flag
 	}
 
 	var dataset *C.randomx_dataset
-	dataset = C.randomx_alloc_dataset(SumFlag.toC())
+	dataset = C.randomx_alloc_dataset(SumFlag)
 	if dataset == nil {
 		return nil, errors.New("failed to alloc mem for dataset")
 	}
@@ -79,7 +82,7 @@ func DatasetItemCount() uint32 {
 	return uint32(length)
 }
 
-func InitDataset(dataset *C.randomx_dataset, cache *C.randomx_cache, startItem uint32, itemCount uint32) {
+func InitDataset(dataset Dataset, cache Cache, startItem uint32, itemCount uint32) {
 	if dataset == nil {
 		panic("alloc dataset mem is required")
 	}
@@ -91,15 +94,15 @@ func InitDataset(dataset *C.randomx_dataset, cache *C.randomx_cache, startItem u
 	C.randomx_init_dataset(dataset, cache, C.ulong(startItem), C.ulong(itemCount))
 }
 
-func GetDatasetMemory(dataset *C.randomx_dataset) unsafe.Pointer {
+func GetDatasetMemory(dataset Dataset) unsafe.Pointer {
 	return C.randomx_get_dataset_memory(dataset)
 }
 
-func ReleaseDataset(dataset *C.randomx_dataset) {
+func ReleaseDataset(dataset Dataset) {
 	C.randomx_release_dataset(dataset)
 }
 
-func CreateVM(cache *C.randomx_cache, dataset *C.randomx_dataset, flags ...Flag) (*C.randomx_vm, error) {
+func CreateVM(cache Cache, dataset Dataset, flags ...C.randomx_flags) (VM, error) {
 	var SumFlag = FlagDefault
 	for _, flag := range flags {
 		SumFlag = SumFlag | flag
@@ -109,7 +112,7 @@ func CreateVM(cache *C.randomx_cache, dataset *C.randomx_dataset, flags ...Flag)
 		panic("failed creating vm: using empty dataset")
 	}
 
-	vm := C.randomx_create_vm(SumFlag.toC(), cache, dataset)
+	vm := C.randomx_create_vm(SumFlag, cache, dataset)
 
 	if vm == nil {
 		return nil, errors.New("failed to create vm")
@@ -118,61 +121,44 @@ func CreateVM(cache *C.randomx_cache, dataset *C.randomx_dataset, flags ...Flag)
 	return vm, nil
 }
 
-func SetVMCache(vm *C.randomx_vm, cache *C.randomx_cache) {
+func SetVMCache(vm VM, cache Cache) {
 	C.randomx_vm_set_cache(vm, cache)
 }
 
-func SetVMDataset(vm *C.randomx_vm, dataset *C.randomx_dataset) {
+func SetVMDataset(vm VM, dataset Dataset) {
 	C.randomx_vm_set_dataset(vm, dataset)
 }
 
-func DestroyVM(vm *C.randomx_vm) {
+func DestroyVM(vm VM) {
 	C.randomx_destroy_vm(vm)
 }
 
-func CalculateHash(vm *C.randomx_vm, in []byte) []byte {
-	out := make([]byte, C.RANDOMX_HASH_SIZE)
+func CalculateHash(vm VM, in []byte) []byte {
 	if vm == nil {
 		panic("failed hashing: using empty vm")
 	}
 
-	C.randomx_calculate_hash(vm, unsafe.Pointer(&in[0]), C.size_t(len(in)), unsafe.Pointer(&out[0]))
-	return out
+	output := C.CBytes(make([]byte, RxHashSize))
+	C.randomx_calculate_hash(vm, C.CBytes(in), C.size_t(len(in)), output)
+
+	return C.GoBytes(output, RxHashSize)
 }
 
-func CalculateHashFirst(vm *C.randomx_vm, in []byte) {
-	if vm == nil {
-		panic("failed hashing: using empty vm")
-	}
-	C.randomx_calculate_hash_first(vm, unsafe.Pointer(&in[0]), C.size_t(len(in)))
-}
-
-func CalculateHashNext(vm *C.randomx_vm, in []byte) []byte {
-	out := make([]byte, C.RANDOMX_HASH_SIZE)
+func CalculateHashFirst(vm VM, in []byte) {
 	if vm == nil {
 		panic("failed hashing: using empty vm")
 	}
 
-	C.randomx_calculate_hash_next(vm, unsafe.Pointer(&in[0]), C.size_t(len(in)), unsafe.Pointer(&out[0]))
-	return out
+	C.randomx_calculate_hash_first(vm, C.CBytes(in), C.size_t(len(in))
 }
 
-//// Types
+func CalculateHashNext(vm VM, in []byte) []byte {
+	if vm == nil {
+		panic("failed hashing: using empty vm")
+	}
 
-type RxCache struct {
-	seed      []byte
-	cache     *C.randomx_cache
-	initCount uint64
-}
+	output := C.CBytes(make([]byte, RxHashSize))
+	C.randomx_calculate_hash_next(vm, C.CBytes(in), C.size_t(len(in)), output)
 
-type RxDataset struct {
-	dataset *C.randomx_dataset
-	rxCache *RxCache
-
-	workerNum uint32
-}
-
-type RxVM struct {
-	vm        *C.randomx_vm
-	rxDataset *RxDataset
+	return C.GoBytes(output, RxHashSize)
 }
