@@ -122,8 +122,8 @@ func BenchmarkCalculateHashDefault(b *testing.B) {
 }
 
 func BenchmarkCalculateHashJIT(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.FlagDefault | randomx.FlagJIT)
-	ds, _ := randomx.AllocDataset(randomx.FlagDefault | randomx.FlagJIT)
+	cache, _ := randomx.AllocCache(randomx.FlagDefault, randomx.FlagJIT)
+	ds, _ := randomx.AllocDataset(randomx.FlagDefault, randomx.FlagJIT)
 	randomx.InitCache(cache, []byte("123"))
 	count := randomx.DatasetItemCount()
 	var wg sync.WaitGroup
@@ -150,8 +150,8 @@ func BenchmarkCalculateHashJIT(b *testing.B) {
 }
 
 func BenchmarkCalculateHashFullMEM(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.FlagDefault | randomx.FlagFullMEM)
-	ds, _ := randomx.AllocDataset(randomx.FlagDefault | randomx.FlagFullMEM)
+	cache, _ := randomx.AllocCache(randomx.FlagDefault, randomx.FlagFullMEM)
+	ds, _ := randomx.AllocDataset(randomx.FlagDefault, randomx.FlagFullMEM)
 	randomx.InitCache(cache, []byte("123"))
 	count := randomx.DatasetItemCount()
 	var wg sync.WaitGroup
@@ -178,8 +178,8 @@ func BenchmarkCalculateHashFullMEM(b *testing.B) {
 }
 
 func BenchmarkCalculateHashHardAES(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.FlagDefault | randomx.FlagHardAES)
-	ds, _ := randomx.AllocDataset(randomx.FlagDefault | randomx.FlagHardAES)
+	cache, _ := randomx.AllocCache(randomx.FlagDefault, randomx.FlagHardAES)
+	ds, _ := randomx.AllocDataset(randomx.FlagDefault, randomx.FlagHardAES)
 	randomx.InitCache(cache, []byte("123"))
 	count := randomx.DatasetItemCount()
 	var wg sync.WaitGroup

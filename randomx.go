@@ -149,7 +149,7 @@ func CalculateHashFirst(vm VM, in []byte) {
 		panic("failed hashing: using empty vm")
 	}
 
-	C.randomx_calculate_hash_first(vm, C.CBytes(in), C.size_t(len(in))
+	C.randomx_calculate_hash_first(vm, C.CBytes(in), C.size_t(len(in)))
 }
 
 func CalculateHashNext(vm VM, in []byte) []byte {
