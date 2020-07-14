@@ -5,6 +5,7 @@ package randomx
 //#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64 -lm
 //#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64 -lm
 //#cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64 -static -static-libgcc -static-libstdc++
+//#include <stdlib.h>
 //#include "randomx.h"
 import "C"
 import (
@@ -138,10 +139,14 @@ func CalculateHash(vm VM, in []byte) []byte {
 		panic("failed hashing: using empty vm")
 	}
 
+	input := C.CBytes(in)
 	output := C.CBytes(make([]byte, RxHashSize))
-	C.randomx_calculate_hash(vm, C.CBytes(in), C.size_t(len(in)), output)
+	C.randomx_calculate_hash(vm, input, C.size_t(len(in)), output)
+	hash := C.GoBytes(output, RxHashSize)
+	C.free(unsafe.Pointer(input))
+	C.free(unsafe.Pointer(output))
 
-	return C.GoBytes(output, RxHashSize)
+	return hash
 }
 
 func CalculateHashFirst(vm VM, in []byte) {
@@ -149,7 +154,9 @@ func CalculateHashFirst(vm VM, in []byte) {
 		panic("failed hashing: using empty vm")
 	}
 
-	C.randomx_calculate_hash_first(vm, C.CBytes(in), C.size_t(len(in)))
+	input := C.CBytes(in)
+	C.randomx_calculate_hash_first(vm, input, C.size_t(len(in)))
+	C.free(unsafe.Pointer(input))
 }
 
 func CalculateHashNext(vm VM, in []byte) []byte {
@@ -157,8 +164,12 @@ func CalculateHashNext(vm VM, in []byte) []byte {
 		panic("failed hashing: using empty vm")
 	}
 
+	input := C.CBytes(in)
 	output := C.CBytes(make([]byte, RxHashSize))
-	C.randomx_calculate_hash_next(vm, C.CBytes(in), C.size_t(len(in)), output)
+	C.randomx_calculate_hash_next(vm, input, C.size_t(len(in)), output)
+	hash := C.GoBytes(output, RxHashSize)
+	C.free(unsafe.Pointer(input))
+	C.free(unsafe.Pointer(output))
 
-	return C.GoBytes(output, RxHashSize)
+	return hash
 }
