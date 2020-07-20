@@ -5,3 +5,4 @@ librandomx.a
 *.cmake
 Makefile
 gxminer
+bazel-*
