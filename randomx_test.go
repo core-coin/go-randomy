@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ngchain/go-randomx"
+	"github.com/core-coin/go-randomx"
 )
 
 var testPairs = [][][]byte{
