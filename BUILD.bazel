@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 load("@bazel_gazelle//:def.bzl", "gazelle")
 
-# gazelle:prefix github.com/ngchain/go-randomx
+# gazelle:prefix github.com/core-coin/go-randomx
 gazelle(name = "gazelle")
 
 cc_library(
@@ -22,7 +22,7 @@ go_library(
     ],
     cgo = True,
     cdeps = [":randomx"],
-    importpath = "github.com/ngchain/go-randomx",
+    importpath = "github.com/core-coin/go-randomx",
     visibility = ["//visibility:public"],
 )
 
