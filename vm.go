@@ -14,7 +14,7 @@ var (
 	emptyVMError = fmt.Errorf("RandomX virtual machine does not exist and cannot create a hash")
 )
 
-func RandomX(vm *RandxVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte, []byte, error) {
+func RandomX(vm *RandxVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte, error) {
 	// Combine header+nonce into a 64 byte seed
 	seed := make([]byte, 40)
 	copy(seed, hash)
@@ -22,27 +22,11 @@ func RandomX(vm *RandxVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte,
 
 	seed = SHA3_512(seed)
 
-	// Start the mix with replicated seed
-	mix := make([]uint32, mixBytes/4)
-	for i := 0; i < len(mix); i++ {
-		mix[i] = binary.LittleEndian.Uint32(seed[i%16*4:])
-	}
-
-	// Compress mix
-	for i := 0; i < len(mix); i += 4 {
-		mix[i/4] = fnv(fnv(fnv(mix[i], mix[i+1]), mix[i+2]), mix[i+3])
-	}
-	mix = mix[:len(mix)/4]
-
-	digest := make([]byte, 32)
-	for i, val := range mix {
-		binary.LittleEndian.PutUint32(digest[i*4:], val)
-	}
-	randXhash, err := randomxhash(vm, mutex, append(seed, digest...))
+	randXhash, err := randomxhash(vm, mutex, seed)
 	if err != nil {
-		return []byte{}, []byte{}, err
+		return []byte{}, err
 	}
-	return digest, randXhash, nil
+	return randXhash, nil
 }
 
 func randomxhash(vm *RandxVm, mutex *sync.Mutex, buf []byte) (ret []byte, err error) {
