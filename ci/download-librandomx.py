@@ -25,7 +25,7 @@ os.makedirs('build')
 
 for i, arr in enumerate(urls):
     filename, dirname = arr
-    url = 'https://github.com/ngchain/RandomX/releases/download/c-api/'
+    url = 'https://github.com/core-coin/RandomY/releases/download/c-api/'
     url += filename
     print('Download', url)
 
