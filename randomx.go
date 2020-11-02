@@ -17,7 +17,7 @@ const RxHashSize = C.RANDOMX_HASH_SIZE
 
 // All flags
 const (
-	FlagDefault     C.randomx_flags = 0 // for all default
+	FlagDefault     C.randomx_flags = 8 + 4; // for all default
 	FlagLargePages  C.randomx_flags = 1 // for dataset & rxCache & vm
 	FlagHardAES     C.randomx_flags = 2 // for vm
 	FlagFullMEM     C.randomx_flags = 4 // for vm
