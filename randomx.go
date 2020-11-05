@@ -106,10 +106,10 @@ func InitDataset(dataset Dataset, cache Cache, startItem uint32, itemCount uint3
 		} else {
 			count = perGoroutine
 		}
-		go func(start, end uint32, wgg *sync.WaitGroup) {
+		go func(start, end uint32) {
 			C.randomx_init_dataset(dataset, cache, C.ulong(start), C.ulong(end))
-			wgg.Done()
-		}(startItem, count, &wg)
+			wg.Done()
+		}(startItem, count)
 		startItem += count
 	}
 	wg.Wait()
