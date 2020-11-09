@@ -10,6 +10,7 @@ package randomx
 import "C"
 import (
 	"errors"
+	"sync"
 	"unsafe"
 )
 
@@ -17,11 +18,11 @@ const RxHashSize = C.RANDOMX_HASH_SIZE
 
 // All flags
 const (
-	FlagDefault     C.randomx_flags = 8 + 4; // for all default
-	FlagLargePages  C.randomx_flags = 1 // for dataset & rxCache & vm
-	FlagHardAES     C.randomx_flags = 2 // for vm
-	FlagFullMEM     C.randomx_flags = 4 // for vm
-	FlagJIT         C.randomx_flags = 8 // for vm & cache
+	FlagDefault     C.randomx_flags = 8 + 4 // for all default
+	FlagLargePages  C.randomx_flags = 1     // for dataset & rxCache & vm
+	FlagHardAES     C.randomx_flags = 2     // for vm
+	FlagFullMEM     C.randomx_flags = 4     // for vm
+	FlagJIT         C.randomx_flags = 8     // for vm & cache
 	FlagSecure      C.randomx_flags = 16
 	FlagArgon2SSSE3 C.randomx_flags = 32 // for cache
 	FlagArgon2AVX2  C.randomx_flags = 64 // for cache
@@ -91,8 +92,27 @@ func InitDataset(dataset Dataset, cache Cache, startItem uint32, itemCount uint3
 	if cache == nil {
 		panic("alloc cache mem is required")
 	}
+	goroutinesCount := uint32(128)
 
-	C.randomx_init_dataset(dataset, cache, C.ulong(startItem), C.ulong(itemCount))
+	perGoroutine := itemCount / goroutinesCount
+	remainder := itemCount % goroutinesCount
+	var wg sync.WaitGroup
+
+	for i := uint32(0); i < goroutinesCount; i++ {
+		count := uint32(0)
+		wg.Add(1)
+		if i == goroutinesCount-1 {
+			count = perGoroutine + remainder
+		} else {
+			count = perGoroutine
+		}
+		go func(start, end uint32) {
+			C.randomx_init_dataset(dataset, cache, C.ulong(start), C.ulong(end))
+			wg.Done()
+		}(startItem, count)
+		startItem += count
+	}
+	wg.Wait()
 }
 
 func GetDatasetMemory(dataset Dataset) unsafe.Pointer {
