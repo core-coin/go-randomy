@@ -92,7 +92,7 @@ func InitDataset(dataset Dataset, cache Cache, startItem uint32, itemCount uint3
 	if cache == nil {
 		panic("alloc cache mem is required")
 	}
-	goroutinesCount := uint32(160)
+	goroutinesCount := uint32(128)
 
 	perGoroutine := itemCount / goroutinesCount
 	remainder := itemCount % goroutinesCount
