@@ -15,7 +15,7 @@ var testPairs = [][][]byte{
 	{
 		[]byte("test key 000"),
 		[]byte("This is a test"),
-		[]byte("46b49051978dcce1cd534a4066035184afb16a0591b43522466e10cc2496717e"),
+		[]byte("0e9ab13e4b337c866e17445621be8d180c0a18a325932078dc33f7ac69ff17e8"),
 	},
 }
 
