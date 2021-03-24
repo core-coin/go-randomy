@@ -46,19 +46,19 @@ type RandxVm struct {
 }
 
 func NewRandxVm(key []byte) (ret *RandxVm, err error) {
-	cache, err := AllocCache(FlagDefault)
+	cache, err := AllocCache(GetFlags())
 	if nil != err {
 		return
 	}
 	InitCache(cache, key)
 
-	dataset, err := AllocDataset(FlagDefault)
+	dataset, err := AllocDataset(GetFlags())
 	if nil != err {
 		return
 	}
 	InitDataset(dataset, cache, 0, DatasetItemCount()) // todo: multi core acceleration
 
-	vm, err := CreateVM(cache, dataset, FlagJIT, FlagHardAES, FlagFullMEM)
+	vm, err := CreateVM(cache, dataset, GetFlags())
 	if nil != err {
 		return
 	}

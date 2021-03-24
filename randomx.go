@@ -11,8 +11,11 @@ package randomx
 import "C"
 import (
 	"errors"
+	"runtime"
 	"sync"
 	"unsafe"
+
+	"golang.org/x/sys/cpu"
 )
 
 const RxHashSize = C.RANDOMX_HASH_SIZE
@@ -36,8 +39,25 @@ type Dataset *C.randomx_dataset
 
 type VM *C.randomx_vm
 
+func hasAES() bool {
+	switch runtime.GOARCH {
+	case "amd64":
+		return cpu.X86.HasAES
+	case "arm64":
+		return cpu.ARM64.HasAES
+	default:
+		panic("unsupported arch")
+	}
+}
+
+func GetFlags() C.randomx_flags {
+	if hasAES() {
+		return FlagDefault + FlagHardAES
+	}
+	return FlagDefault
+}
 func AllocCache(flags ...C.randomx_flags) (Cache, error) {
-	var SumFlag = FlagDefault
+	var SumFlag = GetFlags()
 	var cache *C.randomx_cache
 
 	for _, flag := range flags {
@@ -65,7 +85,7 @@ func ReleaseCache(cache Cache) {
 }
 
 func AllocDataset(flags ...C.randomx_flags) (Dataset, error) {
-	var SumFlag = FlagDefault
+	var SumFlag = GetFlags()
 	for _, flag := range flags {
 		SumFlag = SumFlag | flag
 	}
@@ -125,7 +145,7 @@ func ReleaseDataset(dataset Dataset) {
 }
 
 func CreateVM(cache Cache, dataset Dataset, flags ...C.randomx_flags) (VM, error) {
-	var SumFlag = FlagDefault
+	var SumFlag = GetFlags()
 	for _, flag := range flags {
 		SumFlag = SumFlag | flag
 	}
