@@ -77,7 +77,7 @@ func TestCreateVM(t *testing.T) {
 	}
 	wg.Wait()
 	t.Log("dataset initialization finished") // too slow when one thread
-	vm, _ := randomx.CreateVM(cache, ds, randomx.FlagJIT)
+	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
 
 	var hashCorrect = make([]byte, hex.DecodedLen(len(tp[2])))
 	_, err := hex.Decode(hashCorrect, tp[2])
