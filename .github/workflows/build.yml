@@ -1,0 +1,19 @@
+name: go-randomy build
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Setup
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14.x
+        id: go
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Test
+        run: go test ./...
