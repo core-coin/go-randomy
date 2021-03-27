@@ -22,6 +22,6 @@ jobs:
           platform: x64  
       - name: Test
         run: |
-          pathman /au c:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
+          setx /M path "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;%path%"
           echo %PATH%
           go test ./...
