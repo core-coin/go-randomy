@@ -18,7 +18,7 @@ jobs:
       - name: Test
         run:
           bash
-          go test ./...
+          go test -v
   tag:
     needs: [build]
     name: Tag
