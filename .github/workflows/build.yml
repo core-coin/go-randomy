@@ -16,8 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Test
-        shell: bash
-        run: go test ./...
+        run:
+          bash
+          go test ./...
   tag:
     needs: [build]
     name: Tag
