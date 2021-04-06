@@ -16,6 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Test
+        shell: bash
         run: |
           go test ./...
       - name: Bump version
