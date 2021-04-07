@@ -15,10 +15,12 @@ jobs:
         id: go
       - name: Checkout
         uses: actions/checkout@v1
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
       - name: Test
-        run:
-          bash
-          go test -v
+        run: go test -v
   tag:
     needs: [build]
     name: Tag
