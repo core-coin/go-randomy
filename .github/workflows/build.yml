@@ -20,6 +20,7 @@ jobs:
         with:
           platform: x64
       - name: Test
+        shell: msys2 {0}
         run: go test -v
   tag:
     needs: [build]
