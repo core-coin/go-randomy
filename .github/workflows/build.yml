@@ -15,10 +15,8 @@ jobs:
         id: go
       - name: Checkout
         uses: actions/checkout@v1
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
+      - name: Set up nsys2
+        uses: msys2/setup-msys2@v2
       - name: Test
         shell: msys2 {0}
         run: go test -v
