@@ -1,4 +1,4 @@
-module github.com/core-coin/go-randomx
+module github.com/core-coin/go-randomy
 
 go 1.14
 
