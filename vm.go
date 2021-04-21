@@ -1,4 +1,4 @@
-package randomx
+package randomy
 
 import (
 	"encoding/binary"

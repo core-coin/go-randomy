@@ -1,4 +1,4 @@
-package randomx
+package randomy
 
 //#cgo CFLAGS: -I./randomx
 //#cgo LDFLAGS: -lrandomx -lstdc++

@@ -1,4 +1,4 @@
-package randomx_test
+package randomy_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/core-coin/go-randomx"
+	"github.com/core-coin/go-randomy"
 )
 
 var testPairs = [][][]byte{
@@ -20,48 +20,48 @@ var testPairs = [][][]byte{
 }
 
 func TestAllocCache(t *testing.T) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags())
-	randomx.InitCache(cache, []byte("123"))
-	randomx.ReleaseCache(cache)
+	cache, _ := randomy.AllocCache(randomy.GetFlags())
+	randomy.InitCache(cache, []byte("123"))
+	randomy.ReleaseCache(cache)
 }
 
 func TestAllocDataset(t *testing.T) {
 	t.Log("warning: cannot use GetFlags() only, very slow!. After using FlagJIT, really fast!")
 
-	ds, err := randomx.AllocDataset(randomx.FlagJIT)
+	ds, err := randomy.AllocDataset(randomy.FlagJIT)
 	if err != nil {
 		panic(err)
 	}
-	cache, err := randomx.AllocCache(randomx.FlagJIT)
+	cache, err := randomy.AllocCache(randomy.FlagJIT)
 	if err != nil {
 		panic(err)
 	}
 
 	seed := make([]byte, 32)
-	randomx.InitCache(cache, seed)
+	randomy.InitCache(cache, seed)
 	t.Log("rxCache initialization finished")
 
-	count := randomx.DatasetItemCount()
+	count := randomy.DatasetItemCount()
 	t.Log("dataset count:", count/1024/1024, "mb")
-	randomx.InitDataset(ds, cache, 0, count)
-	t.Log(randomx.GetDatasetMemory(ds))
+	randomy.InitDataset(ds, cache, 0, count)
+	t.Log(randomy.GetDatasetMemory(ds))
 
-	randomx.ReleaseDataset(ds)
-	randomx.ReleaseCache(cache)
+	randomy.ReleaseDataset(ds)
+	randomy.ReleaseCache(cache)
 }
 
 func TestCreateVM(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	var tp = testPairs[0]
-	cache, _ := randomx.AllocCache(randomx.GetFlags())
+	cache, _ := randomy.AllocCache(randomy.GetFlags())
 	t.Log("alloc cache mem finished")
 	seed := tp[0]
-	randomx.InitCache(cache, seed)
+	randomy.InitCache(cache, seed)
 	t.Log("cache initialization finished")
 
-	ds, _ := randomx.AllocDataset(randomx.GetFlags())
+	ds, _ := randomy.AllocDataset(randomy.GetFlags())
 	t.Log("alloc dataset mem finished")
-	count := randomx.DatasetItemCount()
+	count := randomy.DatasetItemCount()
 	t.Log("dataset count:", count)
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
@@ -72,12 +72,12 @@ func TestCreateVM(t *testing.T) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
 	t.Log("dataset initialization finished") // too slow when one thread
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	var hashCorrect = make([]byte, hex.DecodedLen(len(tp[2])))
 	_, err := hex.Decode(hashCorrect, tp[2])
@@ -85,7 +85,7 @@ func TestCreateVM(t *testing.T) {
 		t.Log(err)
 	}
 
-	hash := randomx.CalculateHash(vm, tp[1])
+	hash := randomy.CalculateHash(vm, tp[1])
 	if !bytes.Equal(hash, hashCorrect) {
 		t.Logf("answer is incorrect: %x, %x", hash, hashCorrect)
 		t.Fail()
@@ -94,10 +94,10 @@ func TestCreateVM(t *testing.T) {
 
 // go test -v -run=^$ -benchtime=1m  -timeout 20m -bench=.
 func BenchmarkCalculateHashDefault(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags())
-	ds, _ := randomx.AllocDataset(randomx.GetFlags())
-	randomx.InitCache(cache, []byte("123"))
-	count := randomx.DatasetItemCount()
+	cache, _ := randomy.AllocCache(randomy.GetFlags())
+	ds, _ := randomy.AllocDataset(randomy.GetFlags())
+	randomy.InitCache(cache, []byte("123"))
+	count := randomy.DatasetItemCount()
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
 	for i := uint32(0); i < workerNum; i++ {
@@ -106,26 +106,26 @@ func BenchmarkCalculateHashDefault(b *testing.B) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		randomx.CalculateHash(vm, []byte("123"))
+		randomy.CalculateHash(vm, []byte("123"))
 	}
 
-	randomx.DestroyVM(vm)
+	randomy.DestroyVM(vm)
 }
 
 func BenchmarkCalculateHashJIT(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags(), randomx.FlagJIT)
-	ds, _ := randomx.AllocDataset(randomx.GetFlags(), randomx.FlagJIT)
-	randomx.InitCache(cache, []byte("123"))
-	count := randomx.DatasetItemCount()
+	cache, _ := randomy.AllocCache(randomy.GetFlags(), randomy.FlagJIT)
+	ds, _ := randomy.AllocDataset(randomy.GetFlags(), randomy.FlagJIT)
+	randomy.InitCache(cache, []byte("123"))
+	count := randomy.DatasetItemCount()
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
 	for i := uint32(0); i < workerNum; i++ {
@@ -134,26 +134,26 @@ func BenchmarkCalculateHashJIT(b *testing.B) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		randomx.CalculateHash(vm, []byte("123"))
+		randomy.CalculateHash(vm, []byte("123"))
 	}
 
-	randomx.DestroyVM(vm)
+	randomy.DestroyVM(vm)
 }
 
 func BenchmarkCalculateHashFullMEM(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags(), randomx.FlagFullMEM)
-	ds, _ := randomx.AllocDataset(randomx.GetFlags(), randomx.FlagFullMEM)
-	randomx.InitCache(cache, []byte("123"))
-	count := randomx.DatasetItemCount()
+	cache, _ := randomy.AllocCache(randomy.GetFlags(), randomy.FlagFullMEM)
+	ds, _ := randomy.AllocDataset(randomy.GetFlags(), randomy.FlagFullMEM)
+	randomy.InitCache(cache, []byte("123"))
+	count := randomy.DatasetItemCount()
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
 	for i := uint32(0); i < workerNum; i++ {
@@ -162,26 +162,26 @@ func BenchmarkCalculateHashFullMEM(b *testing.B) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		randomx.CalculateHash(vm, []byte("123"))
+		randomy.CalculateHash(vm, []byte("123"))
 	}
 
-	randomx.DestroyVM(vm)
+	randomy.DestroyVM(vm)
 }
 
 func BenchmarkCalculateHashHardAES(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags(), randomx.FlagHardAES)
-	ds, _ := randomx.AllocDataset(randomx.GetFlags(), randomx.FlagHardAES)
-	randomx.InitCache(cache, []byte("123"))
-	count := randomx.DatasetItemCount()
+	cache, _ := randomy.AllocCache(randomy.GetFlags(), randomy.FlagHardAES)
+	ds, _ := randomy.AllocDataset(randomy.GetFlags(), randomy.FlagHardAES)
+	randomy.InitCache(cache, []byte("123"))
+	count := randomy.DatasetItemCount()
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
 	for i := uint32(0); i < workerNum; i++ {
@@ -190,26 +190,26 @@ func BenchmarkCalculateHashHardAES(b *testing.B) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		randomx.CalculateHash(vm, []byte("123"))
+		randomy.CalculateHash(vm, []byte("123"))
 	}
 
-	randomx.DestroyVM(vm)
+	randomy.DestroyVM(vm)
 }
 
 func BenchmarkCalculateHashAll(b *testing.B) {
-	cache, _ := randomx.AllocCache(randomx.GetFlags(), randomx.FlagArgon2, randomx.FlagArgon2AVX2, randomx.FlagArgon2SSSE3, randomx.FlagFullMEM, randomx.FlagHardAES, randomx.FlagJIT) // without lagePage to avoid panic
-	ds, _ := randomx.AllocDataset(randomx.GetFlags(), randomx.FlagArgon2, randomx.FlagArgon2AVX2, randomx.FlagArgon2SSSE3, randomx.FlagFullMEM, randomx.FlagHardAES, randomx.FlagJIT)
-	randomx.InitCache(cache, []byte("123"))
-	count := randomx.DatasetItemCount()
+	cache, _ := randomy.AllocCache(randomy.GetFlags(), randomy.FlagArgon2, randomy.FlagArgon2AVX2, randomy.FlagArgon2SSSE3, randomy.FlagFullMEM, randomy.FlagHardAES, randomy.FlagJIT) // without lagePage to avoid panic
+	ds, _ := randomy.AllocDataset(randomy.GetFlags(), randomy.FlagArgon2, randomy.FlagArgon2AVX2, randomy.FlagArgon2SSSE3, randomy.FlagFullMEM, randomy.FlagHardAES, randomy.FlagJIT)
+	randomy.InitCache(cache, []byte("123"))
+	count := randomy.DatasetItemCount()
 	var wg sync.WaitGroup
 	var workerNum = uint32(runtime.NumCPU())
 	for i := uint32(0); i < workerNum; i++ {
@@ -218,17 +218,17 @@ func BenchmarkCalculateHashAll(b *testing.B) {
 		b := (count * (i + 1)) / workerNum
 		go func() {
 			defer wg.Done()
-			randomx.InitDataset(ds, cache, a, b-a)
+			randomy.InitDataset(ds, cache, a, b-a)
 		}()
 	}
 	wg.Wait()
-	vm, _ := randomx.CreateVM(cache, ds, randomx.GetFlags())
+	vm, _ := randomy.CreateVM(cache, ds, randomy.GetFlags())
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		randomx.CalculateHash(vm, []byte("123"))
+		randomy.CalculateHash(vm, []byte("123"))
 	}
 
-	randomx.DestroyVM(vm)
+	randomy.DestroyVM(vm)
 }
