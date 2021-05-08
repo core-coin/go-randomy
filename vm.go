@@ -14,7 +14,7 @@ var (
 	emptyVMError = fmt.Errorf("RandomX virtual machine does not exist and cannot create a hash")
 )
 
-func RandomX(vm *RandxVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte, error) {
+func RandomY(vm *RandyVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte, error) {
 	// Combine header+nonce into a 64 byte seed
 	seed := make([]byte, 40)
 	copy(seed, hash)
@@ -22,14 +22,14 @@ func RandomX(vm *RandxVm, mutex *sync.Mutex, hash []byte, nonce uint64) ([]byte,
 
 	seed = SHA3_512(seed)
 
-	randXhash, err := randomxhash(vm, mutex, seed)
+	randXhash, err := randomyhash(vm, mutex, seed)
 	if err != nil {
 		return []byte{}, err
 	}
 	return randXhash, nil
 }
 
-func randomxhash(vm *RandxVm, mutex *sync.Mutex, buf []byte) (ret []byte, err error) {
+func randomyhash(vm *RandyVm, mutex *sync.Mutex, buf []byte) (ret []byte, err error) {
 	if vm == nil {
 		return []byte{}, emptyVMError
 	}
@@ -39,13 +39,13 @@ func randomxhash(vm *RandxVm, mutex *sync.Mutex, buf []byte) (ret []byte, err er
 	return
 }
 
-type RandxVm struct {
+type RandyVm struct {
 	cache   Cache
 	dataset Dataset
 	vm      VM
 }
 
-func NewRandxVm(key []byte) (ret *RandxVm, err error) {
+func NewRandyVm(key []byte) (ret *RandyVm, err error) {
 	cache, err := AllocCache(GetFlags())
 	if nil != err {
 		return
@@ -63,7 +63,7 @@ func NewRandxVm(key []byte) (ret *RandxVm, err error) {
 		return
 	}
 
-	ret = &RandxVm{
+	ret = &RandyVm{
 		cache:   cache,
 		dataset: dataset,
 		vm:      vm,
@@ -72,22 +72,22 @@ func NewRandxVm(key []byte) (ret *RandxVm, err error) {
 	return
 }
 
-func NewRandomXVMWithKeyAndMutex() (*RandxVm, *sync.Mutex) {
+func NewRandomYVMWithKeyAndMutex() (*RandyVm, *sync.Mutex) {
 	key := []byte{53, 54, 55, 56, 57}
-	vm, err := NewRandxVm(key)
+	vm, err := NewRandyVm(key)
 	if nil != err {
 		panic(err)
 	}
 	return vm, new(sync.Mutex)
 }
 
-func (this *RandxVm) Close() {
+func (this *RandyVm) Close() {
 	DestroyVM(this.vm)
 	ReleaseDataset(this.dataset)
 	ReleaseCache(this.cache)
 }
 
-func (this *RandxVm) Hash(buf []byte) (ret []byte) {
+func (this *RandyVm) Hash(buf []byte) (ret []byte) {
 	return CalculateHash(this.vm, buf)
 }
 
