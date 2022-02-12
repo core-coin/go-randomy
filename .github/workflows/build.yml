@@ -5,7 +5,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest, raspbian-private, macos-private]
+        platform: [ubuntu-latest, windows-latest, raspbian-private, macos-latest]
     runs-on: ${{matrix.platform}}
     steps:
       - name: Checkout
