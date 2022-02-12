@@ -1,7 +1,7 @@
 package randomy
 
-//#cgo CFLAGS: -I./randomy
-//#cgo LDFLAGS: -lrandomy -lstdc++
+//#cgo CFLAGS: -I./randomx
+//#cgo LDFLAGS: -lrandomx -lstdc++
 //#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64 -lm
 //#cgo linux,arm64 LDFLAGS:-L${SRCDIR}/build/linux-arm64 -lm
 //#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/macos-x86_64 -lm
