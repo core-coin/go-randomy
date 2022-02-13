@@ -4,6 +4,7 @@ package randomy
 //#cgo LDFLAGS: -lrandomx -lstdc++
 //#cgo linux,amd64 LDFLAGS:-L${SRCDIR}/build/linux-x86_64 -lm
 //#cgo linux,arm64 LDFLAGS:-L${SRCDIR}/build/linux-arm64 -lm
+//#cgo darwin,amd64 CGO_CFLAGS:-mmacosx-version-min=10.12
 //#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/darwin-x86_64 -lm
 //#cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64
 //#include <stdlib.h>
