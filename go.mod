@@ -1,6 +1,6 @@
 module github.com/core-coin/go-randomy
 
-go 1.14
+go 1.16
 
 require (
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
