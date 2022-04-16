@@ -4,7 +4,7 @@ package randomy
 //#cgo linux,amd64 LDFLAGS: -lrandomx -lstdc++ -L${SRCDIR}/build/linux-x86_64 -lm
 //#cgo linux,arm64 LDFLAGS: -lrandomx -lstdc++ -L${SRCDIR}/build/linux-arm64 -lm
 //#cgo darwin,amd64 LDFLAGS: -lrandomx -lstdc++ -L${SRCDIR}/build/darwin-x86_64 -lm
-//#cgo windows,amd64 LDFLAGS: -lrandomx -static-libstdc++ -static-libgcc -L${SRCDIR}/build/windows-x86_64 -lm
+//#cgo windows,amd64 LDFLAGS: -lrandomx -static-libstdc++ -L${SRCDIR}/build/windows-x86_64 -lm
 //#include <stdlib.h>
 //#include "randomy.h"
 import "C"
