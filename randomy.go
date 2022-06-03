@@ -56,7 +56,7 @@ func GetFlags() C.randomx_flags {
 	if hasAES() {
 		flag += FlagHardAES
 	}
-	if runtime.GOARCH == "arm64" && runtime.GOOS == "macos" {
+	if runtime.GOARCH == "arm64" && runtime.GOOS == "darwin" {
 		flag += FlagSecure
 	}
 	return flag
