@@ -52,11 +52,16 @@ func hasAES() bool {
 }
 
 func GetFlags() C.randomx_flags {
+	flag := FlagDefault
 	if hasAES() {
-		return FlagDefault + FlagHardAES
+		flag += FlagHardAES
 	}
-	return FlagDefault
+	if runtime.GOARCH == "arm64" && runtime.GOOS == "macos" {
+		flag += FlagSecure
+	}
+	return flag
 }
+
 func AllocCache(flags ...C.randomx_flags) (Cache, error) {
 	var SumFlag = GetFlags()
 	var cache *C.randomx_cache
