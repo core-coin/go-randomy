@@ -34,7 +34,12 @@ jobs:
       - name: Test
         run: go test -v
   build-darwin:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        config:
+          - {os: macos-latest, arch: arm64}
+          - {os: macos-13, arch: amd64}
+    runs-on: ${{ matrix.config.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,14 +47,9 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.21
-      - name: Test arm64
+      - name: Test
         run: |
-          export GOARCH=arm64
-          export GOOS=darwin
-          go test -v
-      - name: Test amd64
-        run: |
-          export GOARCH=amd64
+          export GOARCH=${{ matrix.config.arch }}
           export GOOS=darwin
           go test -v
   release:
