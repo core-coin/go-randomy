@@ -5,6 +5,7 @@ jobs:
     strategy:
       matrix:
         config:
+          - {arch: x86_64, branch: latest-stable}
           - {arch: aarch64, branch: latest-stable}
           - {arch: riscv64, branch: edge}
     runs-on: ubuntu-latest
@@ -24,7 +25,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
+        platform: [windows-latest, macos-latest]
     runs-on: ${{matrix.platform}}
     steps:
       - name: Checkout
