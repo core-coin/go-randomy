@@ -6,13 +6,11 @@ package randomy
 //#cgo linux,arm64 LDFLAGS:-L${SRCDIR}/build/linux-arm64 -lm
 //#cgo linux,aarch64 LDFLAGS:-L${SRCDIR}/build/linux-aarch64 -lm
 //#cgo linux,riscv64 LDFLAGS:-L${SRCDIR}/build/linux-riscv64 -lm
-//#cgo linux,armv7 LDFLAGS:-L${SRCDIR}/build/linux-armv7 -lm
 //#cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/build/darwin-x86_64 -lm
 //#cgo darwin,arm64 LDFLAGS:-L${SRCDIR}/build/darwin-arm64 -lm
 //#cgo windows,amd64 LDFLAGS:-L${SRCDIR}/build/windows-x86_64
 //#include <stdlib.h>
 //#include "randomy.h"
-darwin-arm64  darwin-x86_64  linux-aarch64  linux-arm64  linux-armv7  linux-riscv64  linux-x86_64  windows-x86_64
 import "C"
 import (
 	"errors"

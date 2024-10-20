@@ -6,7 +6,6 @@ jobs:
       matrix:
         config:
           - {arch: aarch64, branch: latest-stable}
-          - {arch: armv7, branch: latest-stable}
           - {arch: riscv64, branch: edge}
     runs-on: ubuntu-latest
     steps:
