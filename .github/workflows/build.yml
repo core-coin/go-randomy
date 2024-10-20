@@ -1,28 +1,64 @@
 name: go-randomy build
 on: [push]
 jobs:
-  test:
-    name: Build
+  build-alpine:
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest, raspbian-private, macos-latest]
-    runs-on: ${{matrix.platform}}
+        config:
+          - {arch: x86_64, branch: latest-stable}
+          - {arch: aarch64, branch: latest-stable}
+          - {arch: riscv64, branch: edge}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Alpine Linux
+      uses: jirutka/setup-alpine@v1
+      with:
+        arch: ${{ matrix.config.arch }}
+        branch: ${{ matrix.config.branch }}
+    - name: Install deps
+      shell: alpine.sh --root {0}
+      run: apk add git cmake gcc g++ make go
+    - name: Test
+      run: go test -v
+  build-windows:
+    runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
       - name: Setup
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
           go-version: 1.21
       - name: Test
         run: go test -v
+  build-darwin:
+    strategy:
+      matrix:
+        config:
+          - {os: macos-latest, arch: arm64}
+          - {os: macos-13, arch: amd64}
+    runs-on: ${{ matrix.config.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+      - name: Test
+        run: |
+          export GOARCH=${{ matrix.config.arch }}
+          export GOOS=darwin
+          go test -v
   release:
-    needs: test
+    needs: [build-alpine, build-windows, build-darwin]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
       - name: Bump version
         id: version_bump
         uses: anothrNick/github-tag-action@v1
