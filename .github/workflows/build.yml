@@ -7,7 +7,6 @@ jobs:
         config:
           - {arch: x86_64, branch: latest-stable}
           - {arch: aarch64, branch: latest-stable}
-          - {arch: riscv64, branch: edge}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -21,7 +20,9 @@ jobs:
       shell: alpine.sh --root {0}
       run: apk add git cmake gcc g++ make go
     - name: Test
+      shell: alpine.sh --root {0}
       run: go test -v
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -30,9 +31,10 @@ jobs:
       - name: Setup
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21
+          go-version: 1.23
       - name: Test
         run: go test -v
+
   build-darwin:
     strategy:
       matrix:
@@ -46,12 +48,13 @@ jobs:
       - name: Setup
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21
+          go-version: 1.23
       - name: Test
         run: |
           export GOARCH=${{ matrix.config.arch }}
           export GOOS=darwin
           go test -v
+
   release:
     needs: [build-alpine, build-windows, build-darwin]
     runs-on: ubuntu-latest
